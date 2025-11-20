@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💖 Cute Chibi Love Calendar 💖</title>
+<style>
+  body {
+    font-family: 'Comic Sans MS', cursive;
+    background: linear-gradient(180deg, #ffe6f2, #fff0f5);
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    color: #555;
+  }
+
+  h1 {
+    color: #ff80aa;
+    margin-top: 20px;
+    text-shadow: 1px 1px 2px #fff;
+  }
+
+  .chibi-gallery {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin: 15px 0;
+  }
+
+  .chibi-gallery img {
+    width: 100px;
+    border-radius: 20px;
+    transition: 0.4s;
+    box-shadow: 0 4px 8px rgba(255, 182, 193, 0.5);
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .chibi-gallery img:hover {
+    transform: scale(1.15) rotate(5deg);
+  }
+
+  @keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+    100% { transform: translateY(0); }
+  }
+
+  .calendar {
+    width: 90%;
+    max-width: 600px;
+    background: #fff9fc;
+    border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(255, 192, 203, 0.4);
+    padding: 20px;
+    margin: 0 auto 30px;
+  }
+
+  .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .calendar-header button {
+    background: #ffd6e8;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    color: #ff66a3;
+    font-weight: bold;
+    transition: 0.3s;
+  }
+
+  .calendar-header button:hover {
+    background: #ffb3d9;
+  }
+
+  .days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  .day {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 10px;
+    cursor: pointer;
+    background: #ffe6f2;
+    transition: 0.3s;
+  }
+
+  .day:hover {
+    background: #ffccdd;
+    transform: scale(1.05);
+  }
+
+  .today {
+    background: #ffb6c1;
+    color: white;
+    font-weight: bold;
+  }
+
+  .event-dot {
+    width: 8px;
+    height: 8px;
+    background: #ff66a3;
+    border-radius: 50%;
+    margin: 4px auto 0;
+  }
+
+  #eventModal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(255, 192, 203, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-content {
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    width: 320px;
+    box-shadow: 0 4px 8px rgba(255, 182, 193, 0.5);
+    text-align: center;
+  }
+
+  .modal-content textarea {
+    width: 100%;
+    height: 60px;
+    margin: 8px 0;
+    padding: 8px;
+    border: 1px solid #ffd6e8;
+    border-radius: 10px;
+    background: #fff9fc;
+  }
+
+  .modal-content button {
+    background: #ff99cc;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  .event-list {
+    text-align: left;
+    background: #fff9fc;
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: 8px;
+    font-size: 14px;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  .event-item {
+    padding: 4px;
+    border-bottom: 1px dashed #ffcce0;
+  }
+
+  .event-item:last-child {
+    border-bottom: none;
+  }
+
+</style>
+</head>
+<body>
+
+<h1>💖 Cute Chibi Love Calendar 💖</h1>
+
+<div class="chibi-gallery">
+  <img src="https://i.pinimg.com/originals/5b/83/17/5b83175cb145b0278c607287d01b09db.png" alt="Chibi 1">
+  <img src="https://i.pinimg.com/originals/df/76/f2/df76f24e60f94cbab5c5562a59ed2088.png" alt="Chibi 2">
+  <img src="https://i.pinimg.com/originals/bf/f7/49/bff7491eb236f7b987b10f2ff55cbd33.png" alt="Chibi 3">
+</div>
+
+<div class="calendar">
+  <div class="calendar-header">
+    <button id="prevMonth">⟵</button>
+    <h2 id="monthYear"></h2>
+    <button id="nextMonth">⟶</button>
+  </div>
+  <div class="days" id="calendarDays"></div>
+</div>
+
+<div id="eventModal">
+  <div class="modal-content">
+    <h3 id="eventDateTitle"></h3>
+    <textarea id="eventInput" placeholder="Tulis kegiatanmu... 💕"></textarea>
+    <button id="saveEvent">Simpan 💌</button>
+    <div id="eventList" class="event-list"></div>
+    <button id="closeModal">Tutup ✨</button>
+  </div>
+</div>
+
+<script>
+  const monthYear = document.getElementById('monthYear');
+  const calendarDays = document.getElementById('calendarDays');
+  const eventModal = document.getElementById('eventModal');
+  const eventInput = document.getElementById('eventInput');
+  const eventList = document.getElementById('eventList');
+  const eventDateTitle = document.getElementById('eventDateTitle');
+  const saveEventBtn = document.getElementById('saveEvent');
+  const closeModalBtn = document.getElementById('closeModal');
+  let currentDate = new Date();
+  let selectedDate = null;
+  let events = JSON.parse(localStorage.getItem('cuteEvents')) || {};
+
+  function renderCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+
+    const months = ["Januari","Februari","Maret","April","Mei","Juni",
+                    "Juli","Agustus","September","Oktober","November","Desember"];
+    monthYear.innerText = `${months[month]} ${year}`;
+    calendarDays.innerHTML = '';
+
+    for (let i = 0; i < firstDay; i++) {
+      calendarDays.innerHTML += `<div></div>`;
+    }
+
+    for (let day = 1; day <= lastDate; day++) {
+      const fullDate = `${year}-${month+1}-${day}`;
+      const today = new Date();
+      const isToday = day === today.getDate() && 
+                      month === today.getMonth() &&
+                      year === today.getFullYear();
+
+      const hasEvent = events[fullDate];
+      calendarDays.innerHTML += `
+        <div class="day ${isToday ? 'today' : ''}" data-date="${fullDate}">
+          ${day}
+          ${hasEvent ? '<div class="event-dot"></div>' : ''}
+        </div>
+      `;
+    }
+
+    document.querySelectorAll('.day').forEach(d => {
+      d.addEventListener('click', () => openModal(d.dataset.date));
+    });
+  }
+
+  function openModal(date) {
+    selectedDate = date;
+    eventDateTitle.innerText = `Kegiatan Tanggal ${date}`;
+    eventList.innerHTML = '';
+    eventInput.value = '';
+    if (events[date]) {
+      events[date].forEach((e, i) => {
+        eventList.innerHTML += `<div class="event-item">💖 ${e}</div>`;
+      });
+    }
+    eventModal.style.display = 'flex';
+  }
+
+  function saveEvent() {
+    const text = eventInput.value.trim();
+    if (text === '') return;
+    if (!events[selectedDate]) events[selectedDate] = [];
+    events[selectedDate].push(text);
+    localStorage.setItem('cuteEvents', JSON.stringify(events));
+    showNotification(`💌 Acara disimpan untuk ${selectedDate}!`);
+    renderCalendar();
+    openModal(selectedDate);
+  }
+
+  function showNotification(message) {
+    if (Notification.permission === "granted") {
+      new Notification("💖 Cute Chibi Calendar", { 
+        body: message, 
+        icon: "https://cdn-icons-png.flaticon.com/512/616/616408.png" 
+      });
+    }
+  }
+
+  document.getElementById('prevMonth').addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+  });
+
+  document.getElementById('nextMonth').addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+  });
+
+  saveEventBtn.addEventListener('click', saveEvent);
+  closeModalBtn.addEventListener('click', () => eventModal.style.display = 'none');
+
+  if (Notification.permission !== "granted") {
+    Notification.requestPermission();
+  }
+
+  renderCalendar();
+</script>
+</body>
+</html>

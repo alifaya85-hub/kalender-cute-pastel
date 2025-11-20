@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalender Cute Pastel Unicorn 🦄💖</title>
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #ffb3e6, #aee4ff, #c7a8ff);
+    background-size: 300% 300%;
+    animation: gradientMove 10s ease infinite;
+    color: #4a4a4a;
+    margin: 0;
+    padding: 0;
+  }
+
+  @keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .calendar-container {
+    width: 90%;
+    max-width: 700px;
+    margin: 50px auto;
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 25px;
+    box-shadow: 0 6px 20px rgba(255, 182, 255, 0.5);
+    padding: 20px;
+    backdrop-filter: blur(8px);
+  }
+
+  h1 {
+    text-align: center;
+    color: #ff69b4;
+    font-size: 2rem;
+    margin-bottom: 15px;
+    text-shadow: 0 0 10px #ffc2e2;
+  }
+
+  .calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 12px;
+  }
+
+  .day {
+    text-align: center;
+    padding: 12px;
+    border-radius: 15px;
+    background-color: #ffe4f7;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(255, 150, 200, 0.3);
+  }
+
+  .day:hover {
+    background-color: #ffd6f7;
+    transform: scale(1.05);
+  }
+
+  .event-popup {
+    display: none;
+    position: fixed;
+    top: 55%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 25px;
+    padding: 25px;
+    box-shadow: 0 5px 30px rgba(255, 128, 200, 0.5);
+    width: 90%;
+    max-width: 400px;
+    z-index: 1000;
+    animation: popupIn 0.4s ease;
+  }
+
+  @keyframes popupIn {
+    from { transform: translate(-50%, -60%) scale(0.9); opacity: 0; }
+    to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  }
+
+  .event-popup h2 {
+    color: #c77dff;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  input[type="time"], input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin: 6px 0;
+    border: 2px solid #ffc2e2;
+    border-radius: 15px;
+    outline: none;
+    background-color: #fff0fa;
+  }
+
+  .event {
+    background-color: #ffebf7;
+    border-left: 5px solid #ff99cc;
+    padding: 10px;
+    margin-top: 8px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .event span {
+    font-size: 0.9rem;
+  }
+
+  .delete-btn {
+    background-color: #ff80c0;
+    border: none;
+    color: white;
+    border-radius: 8px;
+    padding: 4px 8px;
+    cursor: pointer;
+  }
+
+  .delete-btn:hover {
+    background-color: #ff66b3;
+  }
+
+  .close-btn {
+    background-color: #aee4ff;
+    border: none;
+    color: #4a4a4a;
+    padding: 8px 15px;
+    border-radius: 15px;
+    cursor: pointer;
+    display: block;
+    margin: 10px auto 0;
+  }
+
+  .close-btn:hover {
+    background-color: #91d9ff;
+  }
+
+</style>
+</head>
+<body>
+<div class="calendar-container">
+  <h1>🦄 Kalender Unicorn Cute 💖</h1>
+  <div id="calendar" class="calendar"></div>
+</div>
+
+<div id="eventPopup" class="event-popup">
+  <h2 id="eventDate"></h2>
+  <input type="time" id="eventTime" placeholder="Jam">
+  <input type="text" id="eventInput" placeholder="Tulis kegiatan dan tekan Enter 💕">
+  <div id="eventList"></div>
+  <button class="close-btn" onclick="closePopup()">Tutup</button>
+</div>
+
+<script>
+const calendar = document.getElementById("calendar");
+const eventPopup = document.getElementById("eventPopup");
+const eventDate = document.getElementById("eventDate");
+const eventTime = document.getElementById("eventTime");
+const eventInput = document.getElementById("eventInput");
+const eventList = document.getElementById("eventList");
+
+let events = JSON.parse(localStorage.getItem("cuteUnicornEvents")) || {};
+
+const today = new Date();
+const month = today.getMonth();
+const year = today.getFullYear();
+
+const monthNames = [
+  "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+  "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+];
+
+function loadCalendar() {
+  calendar.innerHTML = "";
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  for (let i = 1; i <= daysInMonth; i++) {
+    const day = document.createElement("div");
+    day.classList.add("day");
+    day.innerText = i;
+    day.onclick = () => openPopup(i);
+    calendar.appendChild(day);
+  }
+}
+
+function openPopup(day) {
+  const date = `${day} ${monthNames[month]} ${year}`;
+  eventDate.textContent = `✨ ${date}`;
+  eventPopup.style.display = "block";
+  eventList.innerHTML = "";
+
+  const dateKey = `${day}-${month}-${year}`;
+  if (events[dateKey]) {
+    events[dateKey].forEach((event, index) => {
+      const div = document.createElement("div");
+      div.classList.add("event");
+      div.innerHTML = `<span>🕒 ${event.time} - ${event.text}</span>
+        <button class="delete-btn" onclick="deleteEvent('${dateKey}', ${index})">Hapus</button>`;
+      eventList.appendChild(div);
+    });
+  }
+
+  eventInput.onkeypress = function(e) {
+    if (e.key === "Enter" && eventInput.value.trim() !== "") {
+      const newEvent = {
+        time: eventTime.value || "⏰ Tidak ditentukan",
+        text: eventInput.value.trim()
+      };
+      if (!events[dateKey]) events[dateKey] = [];
+      events[dateKey].push(newEvent);
+      localStorage.setItem("cuteUnicornEvents", JSON.stringify(events));
+      eventInput.value = "";
+      eventTime.value = "";
+      openPopup(day);
+    }
+  };
+}
+
+function deleteEvent(dateKey, index) {
+  events[dateKey].splice(index, 1);
+  if (events[dateKey].length === 0) delete events[dateKey];
+  localStorage.setItem("cuteUnicornEvents", JSON.stringify(events));
+  openPopup(parseInt(dateKey.split("-")[0]));
+}
+
+function closePopup() {
+  eventPopup.style.display = "none";
+}
+
+loadCalendar();
+</script>
+</body>
+</html>

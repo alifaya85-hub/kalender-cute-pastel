@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalender Cute Pastel</title>
+<style>
+  body {
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(135deg, #fce4ec, #e3f2fd);
+    color: #555;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+    height: 100vh;
+    margin: 0;
+    padding: 20px;
+  }
+
+  .calendar {
+    background: #fffafc;
+    border-radius: 25px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    padding: 20px;
+    width: 350px;
+    text-align: center;
+    transition: all 0.3s ease-in-out;
+  }
+
+  .calendar:hover {
+    transform: scale(1.02);
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .header button {
+    background: #f8bbd0;
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .header button:hover {
+    background: #f48fb1;
+  }
+
+  .month-year {
+    font-weight: bold;
+    font-size: 20px;
+    color: #7b1fa2;
+  }
+
+  .days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-top: 10px;
+    font-weight: bold;
+    color: #9c27b0;
+  }
+
+  .dates {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-top: 10px;
+  }
+
+  .date {
+    background: #fce4ec;
+    border-radius: 10px;
+    padding: 10px 0;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .date:hover {
+    background: #f8bbd0;
+    color: white;
+    transform: scale(1.05);
+  }
+
+  .today {
+    background: #c5cae9 !important;
+    font-weight: bold;
+    color: #303f9f;
+  }
+
+  .add-event {
+    margin-top: 20px;
+  }
+
+  input, button {
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+  }
+
+  input {
+    width: 70%;
+    background: #f3e5f5;
+  }
+
+  .add-btn {
+    background: #ce93d8;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .add-btn:hover {
+    background: #ba68c8;
+  }
+
+  .event-list {
+    margin-top: 15px;
+    background: #fce4ec;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 14px;
+    text-align: left;
+  }
+
+  .notif {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #f8bbd0;
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="calendar">
+  <div class="header">
+    <button id="prev">&#10094;</button>
+    <div class="month-year" id="monthYear"></div>
+    <button id="next">&#10095;</button>
+  </div>
+  <div class="days">
+    <div>Min</div>
+    <div>Sen</div>
+    <div>Sel</div>
+    <div>Rab</div>
+    <div>Kam</div>
+    <div>Jum</div>
+    <div>Sab</div>
+  </div>
+  <div class="dates" id="dates"></div>
+
+  <div class="add-event">
+    <input type="text" id="eventText" placeholder="Tulis kegiatan...">
+    <button class="add-btn" id="addEvent">Tambah</button>
+  </div>
+
+  <div class="event-list" id="eventList"></div>
+</div>
+
+<div class="notif" id="notif">🔔 Pengingat kegiatan hari ini!</div>
+
+<script>
+  const monthYear = document.getElementById("monthYear");
+  const dates = document.getElementById("dates");
+  const prev = document.getElementById("prev");
+  const next = document.getElementById("next");
+  const eventText = document.getElementById("eventText");
+  const eventList = document.getElementById("eventList");
+  const notif = document.getElementById("notif");
+  const addEvent = document.getElementById("addEvent");
+
+  let today = new Date();
+  let currentMonth = today.getMonth();
+  let currentYear = today.getFullYear();
+  let events = JSON.parse(localStorage.getItem("events")) || {};
+
+  function renderCalendar() {
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    const startDay = firstDay.getDay();
+    const totalDays = lastDay.getDate();
+
+    monthYear.textContent = firstDay.toLocaleString("id-ID", {
+      month: "long",
+      year: "numeric",
+    });
+
+    dates.innerHTML = "";
+    for (let i = 0; i < startDay; i++) {
+      dates.innerHTML += `<div></div>`;
+    }
+
+    for (let day = 1; day <= totalDays; day++) {
+      let dateKey = `${currentYear}-${currentMonth + 1}-${day}`;
+      let hasEvent = events[dateKey] ? "🌸" : "";
+      let classToday = (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) ? "today" : "";
+      dates.innerHTML += `<div class="date ${classToday}" data-date="${dateKey}">${day}<br>${hasEvent}</div>`;
+    }
+
+    document.querySelectorAll(".date").forEach(d => {
+      d.addEventListener("click", (e) => {
+        let date = e.target.dataset.date;
+        showEvents(date);
+      });
+    });
+  }
+
+  function showEvents(date) {
+    eventList.innerHTML = `<b>Kegiatan pada ${date}:</b><br>`;
+    if (events[date]) {
+      events[date].forEach((ev, i) => {
+        eventList.innerHTML += `- ${ev}<br>`;
+      });
+    } else {
+      eventList.innerHTML += "Belum ada kegiatan 💖";
+    }
+  }
+
+  addEvent.addEventListener("click", () => {
+    let selected = document.querySelector(".today")?.dataset.date;
+    if (!selected) {
+      alert("Klik tanggal dulu ya 💕");
+      return;
+    }
+    let text = eventText.value.trim();
+    if (!text) return;
+
+    if (!events[selected]) events[selected] = [];
+    events[selected].push(text);
+    localStorage.setItem("events", JSON.stringify(events));
+    eventText.value = "";
+    renderCalendar();
+    showEvents(selected);
+  });
+
+  prev.addEventListener("click", () => {
+    currentMonth--;
+    if (currentMonth < 0) {
+      currentMonth = 11;
+      currentYear--;
+    }
+    renderCalendar();
+  });
+
+  next.addEventListener("click", () => {
+    currentMonth++;
+    if (currentMonth > 11) {
+      currentMonth = 0;
+      currentYear++;
+    }
+    renderCalendar();
+  });
+
+  // 🔔 Notifikasi pengingat sederhana
+  function showNotif() {
+    let key = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+    if (events[key] && events[key].length > 0) {
+      notif.style.display = "block";
+      setTimeout(() => notif.style.display = "none", 5000);
+    }
+  }
+
+  renderCalendar();
+  showNotif();
+</script>
+</body>
+</html>

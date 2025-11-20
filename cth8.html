@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💕 Cute Pastel Calendar 💕</title>
+<style>
+  body {
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(to bottom right, #ffe6f2, #e6f7ff);
+    color: #555;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    min-height: 100vh;
+  }
+  h1 {
+    margin-top: 20px;
+    color: #ff80bf;
+    text-shadow: 0 0 5px #ffd6e7;
+  }
+  .calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    padding: 20px;
+    background: #fff0f5;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(255, 182, 193, 0.3);
+  }
+  .day {
+    padding: 15px;
+    background: #fffafc;
+    border-radius: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .day:hover {
+    transform: scale(1.08);
+    background: #ffe0ec;
+  }
+  .popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fffafc;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(255, 192, 203, 0.4);
+    padding: 25px;
+    width: 90%;
+    max-width: 400px;
+    z-index: 10;
+  }
+  .popup input, .popup button {
+    margin: 5px 0;
+    padding: 8px;
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid #ffcce0;
+  }
+  .popup button {
+    background: #ffb3d9;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  .popup button:hover {
+    background: #ff80bf;
+  }
+  .event-list {
+    margin-top: 10px;
+  }
+  .event-item {
+    background: #ffe6f2;
+    padding: 8px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+  }
+  .delete-btn {
+    background: #ff809f;
+    border: none;
+    color: white;
+    padding: 3px 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    float: right;
+  }
+  .love {
+    position: absolute;
+    color: #ff99cc;
+    animation: floatLove 2s linear infinite;
+  }
+  @keyframes floatLove {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+  <h1>💕 Cute Pastel Calendar 💕</h1>
+  <div id="calendar" class="calendar"></div>
+
+  <div id="popup" class="popup">
+    <h3 id="popup-date"></h3>
+    <input type="time" id="startTime" placeholder="Jam mulai">
+    <input type="time" id="endTime" placeholder="Jam selesai">
+    <input type="text" id="eventInput" placeholder="Nama kegiatan">
+    <button onclick="addEvent()">Tambah Kegiatan</button>
+    <div class="event-list" id="eventList"></div>
+    <button onclick="closePopup()">Tutup</button>
+  </div>
+
+<script>
+const calendar = document.getElementById('calendar');
+const popup = document.getElementById('popup');
+const popupDate = document.getElementById('popup-date');
+const eventInput = document.getElementById('eventInput');
+const startTimeInput = document.getElementById('startTime');
+const endTimeInput = document.getElementById('endTime');
+const eventList = document.getElementById('eventList');
+let selectedDate = null;
+
+const monthNames = [
+  "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+  "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+];
+const dayNames = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+
+function createCalendar() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const lastDate = new Date(year, month + 1, 0).getDate();
+
+  calendar.innerHTML = "";
+  for (let i = 0; i < firstDay; i++) {
+    const empty = document.createElement("div");
+    calendar.appendChild(empty);
+  }
+
+  for (let i = 1; i <= lastDate; i++) {
+    const day = document.createElement("div");
+    day.className = "day";
+    day.innerText = i;
+    day.onclick = () => openPopup(i, month, year);
+    calendar.appendChild(day);
+  }
+}
+
+function openPopup(date, month, year) {
+  const now = new Date();
+  const currentTime = now.toTimeString().slice(0, 5);
+  const dayName = dayNames[new Date(year, month, date).getDay()];
+  popupDate.textContent = `${currentTime} - ${dayName}, ${date} ${monthNames[month]} ${year}`;
+  selectedDate = `${year}-${month + 1}-${date}`;
+  popup.style.display = "block";
+  loadEvents();
+}
+
+function closePopup() {
+  popup.style.display = "none";
+}
+
+function addEvent() {
+  const name = eventInput.value.trim();
+  const start = startTimeInput.value;
+  const end = endTimeInput.value;
+
+  if (!name || !start) return alert("Isi nama kegiatan dan jam mulai ya 💕");
+  const events = JSON.parse(localStorage.getItem(selectedDate)) || [];
+  events.push({ name, start, end });
+  localStorage.setItem(selectedDate, JSON.stringify(events));
+
+  eventInput.value = "";
+  startTimeInput.value = "";
+  endTimeInput.value = "";
+  loadEvents();
+  notifyEvent(name, start);
+}
+
+function loadEvents() {
+  eventList.innerHTML = "";
+  const events = JSON.parse(localStorage.getItem(selectedDate)) || [];
+  events.forEach((ev, index) => {
+    const item = document.createElement("div");
+    item.className = "event-item";
+    item.innerHTML = `<b>${ev.start}-${ev.end || "?"}</b> ${ev.name}
+      <button class="delete-btn" onclick="deleteEvent(${index})">x</button>`;
+    eventList.appendChild(item);
+  });
+}
+
+function deleteEvent(index) {
+  const events = JSON.parse(localStorage.getItem(selectedDate)) || [];
+  events.splice(index, 1);
+  localStorage.setItem(selectedDate, JSON.stringify(events));
+  loadEvents();
+}
+
+function notifyEvent(name, time) {
+  if (Notification.permission === "granted") {
+    const notifTime = new Date();
+    notifTime.setMinutes(notifTime.getMinutes() + 1);
+    new Notification("💕 Pengingat Kegiatan 💕", {
+      body: `${name} dimulai jam ${time} 💗`,
+      icon: "https://cdn-icons-png.flaticon.com/512/616/616408.png"
+    });
+  }
+}
+
+if (Notification.permission !== "granted") {
+  Notification.requestPermission();
+}
+
+createCalendar();
+</script>
+</body>
+</html>
